@@ -73,6 +73,7 @@ import os
 import socket
 import tempfile
 import vim
+import time
 
 logPath = ''
 setLog = 0
@@ -134,6 +135,7 @@ def __vimyaErrorMsg (message):
 # a line, the complete line is included! Returns False if an error occured,
 # else True.
 
+
 def sendBufferToMaya (forceBuffer = False):
 
     global logPath, setLog, tempFiles
@@ -187,7 +189,13 @@ def sendBufferToMaya (forceBuffer = False):
             connection.send (
                     "cmdFileOutput -o \"%s\";\n" % logPath.replace ('\\', '/')
                 )
-            vim.command ("TabTail %s" % logPath)
+            k = int(vim.eval('&splitbelow'))
+            vim.command ("set splitbelow")
+            vim.command ("STail %s" % logPath)
+            if k == 1:
+                vim.command ("set splitbelow")
+            else:
+                vim.command ("set nosplitbelow")
             setLog = 0
 
         connection.send ("commandEcho -state on -lineNumbers on;\n")
@@ -204,6 +212,11 @@ def sendBufferToMaya (forceBuffer = False):
                 "sysFile -delete \"%s\";\n" % tmpPath.replace ('\\', '/')
             )
 
+        if showLog and tail:
+            time.sleep(2)
+            vim.command('call tail#Refresh()')
+
+
     except:
         return __vimyaErrorMsg ('Could not send the commands to Maya.')
 
@@ -214,7 +227,31 @@ def sendBufferToMaya (forceBuffer = False):
 
     return True
 
-EOP
+def resetVimyaTail():
+    tail = int (vim.eval ('g:vimyaUseTail'))
+    if tail:
+        k = int(vim.eval('&splitbelow'))
+        vim.command ("set splitbelow")
+        vim.command ("STail %s" % logPath)
+        if k == 1:
+            vim.command ("set splitbelow")
+        else:
+            vim.command ("set nosplitbelow")
+        return True
+    return False
 
+def resetVimyaLog():
+    tail = int (vim.eval ('g:vimyaUseTail'))
+    if tail:
+        __vimyaCloseLog()
+        __vimyaRemoveLog()
+        vim.command('pclose')
+        global logPath
+        logPath=''
+        sendBufferToMaya()
+        return True
+    return False
+
+EOP
 
 " vim: set et si nofoldenable ft=python sts=4 sw=4 tw=79 ts=4 fenc=utf8 :
