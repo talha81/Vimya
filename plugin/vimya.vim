@@ -140,7 +140,8 @@ def sendBufferToMaya (forceBuffer = False):
 
     global logPath, setLog, tempFiles
 
-    type        = vim.eval ('&g:ft')
+    type        = vim.eval ('&ft')
+    print "fileType detected is", type
     defaultType = vim.eval ('g:vimyaDefaultFiletype')
     host        = vim.eval ('g:vimyaHost')
     port        = int (vim.eval ('g:vimyaPort'))
@@ -205,6 +206,7 @@ def sendBufferToMaya (forceBuffer = False):
                         tmpPath.replace ('\\', '/')
                 )
         elif (type == 'mel' or (type == '' and defaultType == 'mel')):
+            print "mel command"
             connection.send ("source \"%s\";\n" % tmpPath.replace ('\\', '/'))
 
         connection.send ("commandEcho -state off -lineNumbers off;\n")
